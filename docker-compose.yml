@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: eftmanager-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-eftmanager}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - eftmanager-data:/var/lib/postgresql/data
+
+volumes:
+  eftmanager-data:
