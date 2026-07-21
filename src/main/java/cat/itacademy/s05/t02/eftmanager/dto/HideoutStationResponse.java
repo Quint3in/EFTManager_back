@@ -8,6 +8,7 @@ public record HideoutStationResponse(
         String normalizedName,
         String imageLink,
         int currentLevel,
+        int minLevel,
         int maxLevel,
         List<HideoutLevelRequirement> remainingRequirements
 ) {}
