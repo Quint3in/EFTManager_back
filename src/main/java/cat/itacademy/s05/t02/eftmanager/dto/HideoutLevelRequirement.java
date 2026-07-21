@@ -4,5 +4,9 @@ import java.util.List;
 
 public record HideoutLevelRequirement(
         int level,
-        List<HideoutItemRequirement> itemRequirements
+        int constructionTimeSeconds,
+        List<HideoutItemRequirement> itemRequirements,
+        List<HideoutTraderRequirement> traderRequirements,
+        List<HideoutStationRequirement> stationRequirements,
+        List<HideoutSkillRequirement> skillRequirements
 ) {}

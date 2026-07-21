@@ -39,7 +39,7 @@ public class ItemService {
                     .body(JsonNode.class);
         } catch (RestClientException ex) {
             throw new ExternalApiException(
-                    "No se pudo obtener el catálogo de ítems desde Tarkov.dev", ex);
+                    "No se pudo obtener el catálogo de ítems", ex);
         }
     }
 
@@ -52,7 +52,7 @@ public class ItemService {
                     .body(JsonNode.class);
         } catch (RestClientException ex) {
             throw new ExternalApiException(
-                    "No se pudo obtener las traducciones de ítems desde Tarkov.dev", ex);
+                    "No se pudo obtener las traducciones de ítems", ex);
         }
     }
 
