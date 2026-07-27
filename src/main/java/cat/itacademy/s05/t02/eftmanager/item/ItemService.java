@@ -1,7 +1,7 @@
-package cat.itacademy.s05.t02.eftmanager.service;
+package cat.itacademy.s05.t02.eftmanager.item;
 
-import cat.itacademy.s05.t02.eftmanager.dto.ItemResponse;
-import cat.itacademy.s05.t02.eftmanager.exception.ExternalApiException;
+import cat.itacademy.s05.t02.eftmanager.common.GameMode;
+import cat.itacademy.s05.t02.eftmanager.common.exception.ExternalApiException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -13,6 +13,7 @@ import tools.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -95,5 +96,61 @@ public class ItemService {
         }
 
         return result;
+    }
+
+    public PagedResponse<ItemSummaryResponse> searchItems(GameMode mode, String query, String categoryId, int page, int size) {
+        JsonNode catalog = getItemsCatalog(mode);
+        JsonNode locale = getItemsLocale(mode).path("data");
+        JsonNode itemsNode = catalog.path("data").path("items");
+
+        String normalizedQuery = query == null ? "" : query.toLowerCase();
+
+        List<ItemSummaryResponse> matches = new ArrayList<>();
+
+        for (Map.Entry<String, JsonNode> entry : itemsNode.properties()) {
+            String itemId = entry.getKey();
+            JsonNode item = entry.getValue();
+
+            String nameKey = item.path("name").asString("");
+            String normalizedName = item.path("normalizedName").asString("");
+            String resolvedName = locale.path(nameKey).asString(normalizedName);
+
+            boolean matchesQuery = normalizedQuery.isBlank()
+                    || resolvedName.toLowerCase().contains(normalizedQuery)
+                    || normalizedName.toLowerCase().contains(normalizedQuery);
+
+            boolean matchesCategory = categoryId == null || categoryId.isBlank()
+                    || itemHasCategory(item.path("categories"), categoryId);
+
+            if (matchesQuery && matchesCategory) {
+                matches.add(new ItemSummaryResponse(
+                        itemId,
+                        resolvedName,
+                        normalizedName,
+                        item.path("iconLink").asString(null),
+                        item.path("avg24hPrice").asInt(0),
+                        item.path("lastLowPrice").asInt(0),
+                        item.path("changeLast48h").asInt(0),
+                        item.path("changeLast48hPercent").asDouble(0),
+                        item.path("basePrice").asInt(0)
+                ));
+            }
+        }
+
+        int totalElements = matches.size();
+        int totalPages = size > 0 ? (int) Math.ceil((double) totalElements / size) : 0;
+        int fromIndex = Math.min(page * size, totalElements);
+        int toIndex = Math.min(fromIndex + size, totalElements);
+
+        return new PagedResponse<>(matches.subList(fromIndex, toIndex), page, size, totalElements, totalPages);
+    }
+
+    private boolean itemHasCategory(JsonNode categoriesNode, String categoryId) {
+        for (JsonNode cat : categoriesNode) {
+            if (categoryId.equals(cat.asString())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
