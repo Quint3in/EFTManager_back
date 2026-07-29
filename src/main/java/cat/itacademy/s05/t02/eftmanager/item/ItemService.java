@@ -83,6 +83,31 @@ public class ItemService {
             String shortNameKey = item.path("shortName").asString("");
             String resolvedShortName = locale.path(shortNameKey).asString(normalizedName);
 
+            List<ItemBuyOption> buyOptions = new ArrayList<>();
+            for (JsonNode buyOption : item.path("buyFromTrader")) {
+                JsonNode taskUnlockNode = buyOption.path("taskUnlock");
+                String taskUnlockId = (taskUnlockNode.isMissingNode() || taskUnlockNode.isNull())
+                        ? null
+                        : taskUnlockNode.asString(null);
+
+                JsonNode buyLimitNode = buyOption.path("buyLimit");
+                Integer buyLimit = (buyLimitNode.isMissingNode() || buyLimitNode.isNull())
+                        ? null
+                        : buyLimitNode.asInt();
+
+                buyOptions.add(new ItemBuyOption(
+                        buyOption.path("trader").asString(""),
+                        buyOption.path("price").asInt(0),
+                        buyOption.path("currency").asString(""),
+                        buyOption.path("currencyItem").asString(""),
+                        buyOption.path("priceRUB").asInt(0),
+                        buyOption.path("minTraderLevel").asInt(0),
+                        buyLimit,
+                        buyOption.path("restockAmount").asInt(0),
+                        taskUnlockId
+                ));
+            }
+
             result.add(new ItemResponse(
                     id,
                     resolvedName,
@@ -91,7 +116,8 @@ public class ItemService {
                     item.path("weight").asDouble(0),
                     item.path("width").asInt(0),
                     item.path("height").asInt(0),
-                    item.path("iconLink").asString(null)
+                    item.path("iconLink").asString(null),
+                    buyOptions
             ));
         }
 
