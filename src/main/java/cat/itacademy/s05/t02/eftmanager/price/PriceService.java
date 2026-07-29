@@ -7,6 +7,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import tools.jackson.databind.JsonNode;
@@ -34,6 +35,8 @@ public class PriceService {
                     .uri("/{externalMode}/prices/{itemId}", mode.getExternalPath(), itemId)
                     .retrieve()
                     .body(JsonNode.class);
+        } catch (HttpClientErrorException.NotFound ex) {
+            return List.of(); // sin histórico: caso normal (p. ej. divisas, ítems de misión)
         } catch (RestClientException ex) {
             throw new ExternalApiException("No se pudo obtener el histórico de precios", ex);
         }

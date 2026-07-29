@@ -1,7 +1,7 @@
 package cat.itacademy.s05.t02.eftmanager.security;
 
-import cat.itacademy.s05.t02.eftmanager.entity.User;
-import cat.itacademy.s05.t02.eftmanager.repository.UserRepository;
+import cat.itacademy.s05.t02.eftmanager.user.User;
+import cat.itacademy.s05.t02.eftmanager.user.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
