@@ -1,5 +1,6 @@
 package cat.itacademy.s05.t02.eftmanager.common.exception;
 
+import cat.itacademy.s05.t02.eftmanager.admin.AdminSelfActionException;
 import cat.itacademy.s05.t02.eftmanager.hideout.InvalidHideoutLevelException;
 import cat.itacademy.s05.t02.eftmanager.hideout.StationNotFoundException;
 import cat.itacademy.s05.t02.eftmanager.auth.UserAlreadyExistsException;
@@ -66,5 +67,29 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidHideoutLevelException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidHideoutLevel(InvalidHideoutLevelException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(cat.itacademy.s05.t02.eftmanager.user.InvalidPasswordException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidPassword(
+            cat.itacademy.s05.t02.eftmanager.user.InvalidPasswordException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(cat.itacademy.s05.t02.eftmanager.admin.AdminSelfActionException.class)
+    public ResponseEntity<Map<String, Object>> handleAdminSelfAction(
+            cat.itacademy.s05.t02.eftmanager.admin.AdminSelfActionException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(cat.itacademy.s05.t02.eftmanager.task.TaskNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleTaskNotFound(
+            cat.itacademy.s05.t02.eftmanager.task.TaskNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(cat.itacademy.s05.t02.eftmanager.task.UserNotFoundForComparisonException.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotFoundForComparison(
+            cat.itacademy.s05.t02.eftmanager.task.UserNotFoundForComparisonException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 }

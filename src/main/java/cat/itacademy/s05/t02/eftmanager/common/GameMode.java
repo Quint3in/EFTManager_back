@@ -2,7 +2,8 @@ package cat.itacademy.s05.t02.eftmanager.common;
 
 public enum GameMode {
     PVP("regular"),
-    PVE("pve");
+    PVE("pve"),
+    SEASON("pvp-season");
 
     private final String externalPath;
 

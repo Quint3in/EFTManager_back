@@ -1,7 +1,7 @@
 package cat.itacademy.s05.t02.eftmanager.skill;
 
-import cat.itacademy.s05.t02.eftmanager.item.ItemService;
 import cat.itacademy.s05.t02.eftmanager.common.GameMode;
+import cat.itacademy.s05.t02.eftmanager.item.ItemService;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 
@@ -17,18 +17,16 @@ public class SkillService {
         this.itemService = itemService;
     }
 
-    public List<SkillResponse> getSkills(GameMode mode, List<String> ids) {
+    public List<SkillResponse> getSkills(GameMode mode, List<String> ids, String lang) {
         JsonNode catalog = itemService.getItemsCatalog(mode);
-        JsonNode locale = itemService.getItemsLocale(mode).path("data");
+        JsonNode locale = itemService.getItemsLocale(mode, lang).path("data");
         JsonNode skillsNode = catalog.path("data").path("skills");
 
         List<SkillResponse> result = new ArrayList<>();
 
         for (JsonNode skill : skillsNode) {
             String skillId = skill.path("id").asString("");
-            if (!ids.contains(skillId)) {
-                continue;
-            }
+            if (!ids.contains(skillId)) continue;
 
             String nameKey = skill.path("name").asString(skillId);
             String normalizedName = skill.path("normalizedName").asString("");

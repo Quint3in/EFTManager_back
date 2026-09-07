@@ -1,13 +1,13 @@
 package cat.itacademy.s05.t02.eftmanager.hideout;
 
-import cat.itacademy.s05.t02.eftmanager.user.User;
-import cat.itacademy.s05.t02.eftmanager.user.UserRepository;
+import cat.itacademy.s05.t02.eftmanager.common.CurrentUserResolver;
 import cat.itacademy.s05.t02.eftmanager.common.GameMode;
+import cat.itacademy.s05.t02.eftmanager.common.TarkovMetadataService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,29 +18,26 @@ import java.util.List;
 public class HideoutController {
 
     private final HideoutService hideoutService;
-    private final UserRepository userRepository;
+    private final CurrentUserResolver currentUserResolver;
+    private final TarkovMetadataService tarkovMetadataService;
 
     @GetMapping("/{mode}")
     public List<HideoutStationResponse> getHideout(@PathVariable String mode,
+                                                   @RequestParam(required = false) String lang,
                                                    @AuthenticationPrincipal UserDetails userDetails) {
         GameMode gameMode = GameMode.valueOf(mode.toUpperCase());
-        Long userId = resolveUserId(userDetails);
-        return hideoutService.getHideoutWithProgress(gameMode, userId);
+        Long userId = currentUserResolver.resolveUserId(userDetails);
+        return hideoutService.getHideoutWithProgress(gameMode, userId, tarkovMetadataService.resolveLanguage(lang));
     }
 
     @PutMapping("/{mode}/{stationId}")
     public HideoutStationResponse updateProgress(@PathVariable String mode,
                                                  @PathVariable String stationId,
+                                                 @RequestParam(required = false) String lang,
                                                  @Valid @RequestBody UpdateHideoutProgressRequest request,
                                                  @AuthenticationPrincipal UserDetails userDetails) {
         GameMode gameMode = GameMode.valueOf(mode.toUpperCase());
-        Long userId = resolveUserId(userDetails);
-        return hideoutService.updateProgress(userId, gameMode, stationId, request.level());
-    }
-
-    private Long resolveUserId(UserDetails userDetails) {
-        User user = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
-        return user.getId();
+        Long userId = currentUserResolver.resolveUserId(userDetails);
+        return hideoutService.updateProgress(userId, gameMode, stationId, request.level(), tarkovMetadataService.resolveLanguage(lang));
     }
 }

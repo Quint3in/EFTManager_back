@@ -11,5 +11,8 @@ public record ItemResponse(
         int width,
         int height,
         String iconLink,
-        List<ItemBuyOption> buyFromTraderOptions
+        boolean canSellOnFlea,
+        int minLevelForFlea,
+        List<ItemBuyOption> buyFromTraderOptions,
+        List<ItemSellOption> sellToTraderOptions
 ) {}

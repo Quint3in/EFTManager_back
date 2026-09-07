@@ -6,6 +6,7 @@ import cat.itacademy.s05.t02.eftmanager.user.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,17 +27,17 @@ public class HideoutService {
     private final RestClient restClient;
     private final HideoutProgressRepository hideoutProgressRepository;
     private final UserRepository userRepository;
-    private final String language;
+    private final HideoutService self;
 
     public HideoutService(RestClient.Builder restClientBuilder,
                           @Value("${tarkov.api.base-url}") String tarkovApiBaseUrl,
-                          @Value("${tarkov.api.language}") String language,
                           HideoutProgressRepository hideoutProgressRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          @Lazy HideoutService self) {
         this.restClient = restClientBuilder.baseUrl(tarkovApiBaseUrl).build();
-        this.language = language;
         this.hideoutProgressRepository = hideoutProgressRepository;
         this.userRepository = userRepository;
+        this.self = self;
     }
 
     @Cacheable(value = "hideoutData", key = "#mode")
@@ -51,11 +52,11 @@ public class HideoutService {
         }
     }
 
-    @Cacheable(value = "hideoutLocale", key = "#mode")
-    public JsonNode getHideoutLocale(GameMode mode) {
+    @Cacheable(value = "hideoutLocale", key = "#mode + '-' + #lang")
+    public JsonNode getHideoutLocale(GameMode mode, String lang) {
         try {
             return restClient.get()
-                    .uri("/{externalMode}/hideout_{lang}", mode.getExternalPath(), language)
+                    .uri("/{externalMode}/hideout_{lang}", mode.getExternalPath(), lang)
                     .retrieve()
                     .body(JsonNode.class);
         } catch (RestClientException ex) {
@@ -68,9 +69,9 @@ public class HideoutService {
     public void evictHideoutCache() {
     }
 
-    public List<HideoutStationResponse> getHideoutWithProgress(GameMode mode, Long userId) {
-        JsonNode catalog = getHideout(mode);
-        JsonNode locale = getHideoutLocale(mode).path("data");
+    public List<HideoutStationResponse> getHideoutWithProgress(GameMode mode, Long userId, String lang) {
+        JsonNode catalog = self.getHideout(mode);
+        JsonNode locale = self.getHideoutLocale(mode, lang).path("data");
         JsonNode stationsNode = catalog.path("data");
 
         Map<String, HideoutProgress> progressByStation = hideoutProgressRepository
@@ -95,9 +96,9 @@ public class HideoutService {
     }
 
     @Transactional
-    public HideoutStationResponse updateProgress(Long userId, GameMode mode, String stationId, int requestedLevel) {
-        JsonNode catalog = getHideout(mode);
-        JsonNode locale = getHideoutLocale(mode).path("data");
+    public HideoutStationResponse updateProgress(Long userId, GameMode mode, String stationId, int requestedLevel, String lang) {
+        JsonNode catalog = self.getHideout(mode);
+        JsonNode locale = self.getHideoutLocale(mode, lang).path("data");
         JsonNode stationsNode = catalog.path("data");
         JsonNode station = stationsNode.path(stationId);
 
@@ -139,12 +140,12 @@ public class HideoutService {
     private HideoutStationResponse buildStationResponse(String stationId, JsonNode station, JsonNode allStations,
                                                         JsonNode locale, int currentLevel) {
         int maxLevel = computeMaxLevel(station);
-        int minLevel = getMinLevel(station);
         List<HideoutLevelRequirement> remaining = computeRemainingRequirements(station, currentLevel, maxLevel, allStations, locale);
 
         String nameKey = station.path("name").asString("");
         String normalizedName = station.path("normalizedName").asString("");
         String resolvedName = locale.path(nameKey).asString(normalizedName);
+        int minLevel = getMinLevel(station);
 
         return new HideoutStationResponse(
                 stationId,
@@ -229,8 +230,37 @@ public class HideoutService {
         return locale.path(nameKey).asString(normalizedName);
     }
 
-    private String formatSkillName(String skill) {
-        if (skill == null || skill.isBlank()) return skill;
-        return skill.replaceAll("(?<=[a-z])(?=[A-Z])", " ");
+    public List<HideoutModeSummary> getProgressSummary(Long userId) {
+        List<HideoutModeSummary> result = new ArrayList<>();
+
+        for (GameMode mode : GameMode.values()) {
+            JsonNode catalog = self.getHideout(mode);
+            JsonNode stationsNode = catalog.path("data");
+
+            Map<String, HideoutProgress> progressByStation = hideoutProgressRepository
+                    .findByUserIdAndMode(userId, mode).stream()
+                    .collect(Collectors.toMap(HideoutProgress::getStationId, p -> p));
+
+            int total = 0;
+            int maxed = 0;
+
+            for (Map.Entry<String, JsonNode> entry : stationsNode.properties()) {
+                String stationId = entry.getKey();
+                JsonNode station = entry.getValue();
+
+                int minLevel = getMinLevel(station);
+                int maxLevel = computeMaxLevel(station);
+                int currentLevel = progressByStation.containsKey(stationId)
+                        ? Math.max(progressByStation.get(stationId).getLevel(), minLevel)
+                        : minLevel;
+
+                total++;
+                if (currentLevel >= maxLevel) maxed++;
+            }
+
+            result.add(new HideoutModeSummary(mode.name().toLowerCase(), total, maxed));
+        }
+
+        return result;
     }
 }

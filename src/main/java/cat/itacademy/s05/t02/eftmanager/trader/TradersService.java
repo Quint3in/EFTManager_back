@@ -5,6 +5,7 @@ import cat.itacademy.s05.t02.eftmanager.common.exception.ExternalApiException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -21,13 +22,13 @@ import java.util.concurrent.TimeUnit;
 public class TradersService {
 
     private final RestClient restClient;
-    private final String language;
+    private final TradersService self;
 
     public TradersService(RestClient.Builder restClientBuilder,
                           @Value("${tarkov.api.base-url}") String tarkovApiBaseUrl,
-                          @Value("${tarkov.api.language}") String language) {
+                          @Lazy TradersService self) {
         this.restClient = restClientBuilder.baseUrl(tarkovApiBaseUrl).build();
-        this.language = language;
+        this.self = self;
     }
 
     @Cacheable(value = "tradersData", key = "#mode")
@@ -42,11 +43,11 @@ public class TradersService {
         }
     }
 
-    @Cacheable(value = "tradersLocale", key = "#mode")
-    public JsonNode getTradersLocale(GameMode mode) {
+    @Cacheable(value = "tradersLocale", key = "#mode + '-' + #lang")
+    public JsonNode getTradersLocale(GameMode mode, String lang) {
         try {
             return restClient.get()
-                    .uri("/{externalMode}/traders_{lang}", mode.getExternalPath(), language)
+                    .uri("/{externalMode}/traders_{lang}", mode.getExternalPath(), lang)
                     .retrieve()
                     .body(JsonNode.class);
         } catch (RestClientException ex) {
@@ -59,18 +60,16 @@ public class TradersService {
     public void evictTradersCache() {
     }
 
-    public List<TraderResponse> getTraders(GameMode mode, List<String> ids) {
-        JsonNode catalog = getTradersCatalog(mode);
-        JsonNode locale = getTradersLocale(mode).path("data");
+    public List<TraderResponse> getTraders(GameMode mode, List<String> ids, String lang) {
+        JsonNode catalog = self.getTradersCatalog(mode);
+        JsonNode locale = self.getTradersLocale(mode, lang).path("data");
         JsonNode tradersNode = catalog.path("data");
 
         List<TraderResponse> result = new ArrayList<>();
 
         for (String id : ids) {
             JsonNode trader = tradersNode.path(id);
-            if (trader.isMissingNode()) {
-                continue;
-            }
+            if (trader.isMissingNode()) continue;
 
             String normalizedName = trader.path("normalizedName").asString("");
 
@@ -97,9 +96,7 @@ public class TradersService {
     }
 
     private Instant parseResetTime(String rawResetTime) {
-        if (rawResetTime == null || rawResetTime.isBlank()) {
-            return null;
-        }
+        if (rawResetTime == null || rawResetTime.isBlank()) return null;
         try {
             return Instant.parse(rawResetTime);
         } catch (DateTimeParseException ex) {
