@@ -1,11 +1,9 @@
 package cat.itacademy.s05.t02.eftmanager.category;
 
 import cat.itacademy.s05.t02.eftmanager.common.GameMode;
+import cat.itacademy.s05.t02.eftmanager.common.TarkovMetadataService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -15,10 +13,11 @@ import java.util.List;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final TarkovMetadataService tarkovMetadataService;
 
     @GetMapping
-    public List<CategoryResponse> getCategories(@RequestParam String mode) {
+    public List<CategoryResponse> getCategories(@RequestParam String mode, @RequestParam(required = false) String lang) {
         GameMode gameMode = GameMode.valueOf(mode.toUpperCase());
-        return categoryService.getCategories(gameMode);
+        return categoryService.getCategories(gameMode, tarkovMetadataService.resolveLanguage(lang));
     }
 }

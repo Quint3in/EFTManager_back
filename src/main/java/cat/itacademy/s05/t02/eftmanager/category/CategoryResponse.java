@@ -7,5 +7,6 @@ public record CategoryResponse(
         String name,
         String normalizedName,
         String parentId,
-        List<String> childrenIds
+        List<String> childrenIds,
+        int itemCount
 ) {}
