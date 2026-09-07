@@ -29,7 +29,7 @@ public class User {
     private String email;
 
     @Column(nullable = false)
-    private String password; // hash de BCrypt, nunca texto plano
+    private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
