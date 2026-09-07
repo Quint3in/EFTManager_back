@@ -1,13 +1,11 @@
 package cat.itacademy.s05.t02.eftmanager;
 
+import cat.itacademy.s05.t02.eftmanager.common.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class EftmanagerApplicationTests {
+class EftmanagerApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	void contextLoads() {
 	}
-
 }
