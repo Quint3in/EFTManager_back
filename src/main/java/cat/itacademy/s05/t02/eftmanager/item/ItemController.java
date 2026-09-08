@@ -4,12 +4,16 @@ import cat.itacademy.s05.t02.eftmanager.common.GameMode;
 import cat.itacademy.s05.t02.eftmanager.common.TarkovMetadataService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/items")
 @RequiredArgsConstructor
+@Validated
 public class ItemController {
 
     private final ItemService itemService;
@@ -28,8 +32,8 @@ public class ItemController {
             @RequestParam(required = false, defaultValue = "") String query,
             @RequestParam(required = false) String categoryId,
             @RequestParam(required = false) String sort,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "60") int size,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "60") @Min(1) @Max(200) int size,
             @RequestParam(required = false) String lang) {
         GameMode gameMode = GameMode.valueOf(mode.toUpperCase());
         return itemService.searchItems(gameMode, query, categoryId, sort, page, size, tarkovMetadataService.resolveLanguage(lang));
@@ -38,6 +42,9 @@ public class ItemController {
     @GetMapping("/by-ids")
     public List<ItemSummaryResponse> getItemSummariesByIds(@RequestParam String mode, @RequestParam List<String> ids,
                                                            @RequestParam(required = false) String lang) {
+        if (ids.size() > 100) {
+            throw new IllegalArgumentException("No se pueden solicitar más de 100 IDs por petición");
+        }
         GameMode gameMode = GameMode.valueOf(mode.toUpperCase());
         return itemService.getSummariesByIds(gameMode, ids, tarkovMetadataService.resolveLanguage(lang));
     }

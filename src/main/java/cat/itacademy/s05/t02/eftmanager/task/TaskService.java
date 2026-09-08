@@ -392,21 +392,23 @@ public class TaskService {
 
     @Transactional
     public List<UpcomingUnlock> setCompleted(Long userId, GameMode mode, String taskId, boolean completed, String lang) {
+        JsonNode catalog = self.getTasksCatalog(mode);
+        if (catalog.path("data").path("tasks").path(taskId).isMissingNode()) {
+            throw new TaskNotFoundException("Misión no encontrada: " + taskId);
+        }
+
         TaskProgress progress = taskProgressRepository.findByUserIdAndTaskIdAndMode(userId, taskId, mode)
                 .orElseGet(() -> TaskProgress.builder()
                         .user(userRepository.getReferenceById(userId))
                         .taskId(taskId)
                         .mode(mode)
                         .build());
-
         progress.setCompleted(completed);
         progress.setCompletedAt(completed ? LocalDateTime.now() : null);
         taskProgressRepository.save(progress);
-
         if (!completed) {
             return List.of();
         }
-
         return findUpcomingUnlocks(mode, userId, taskId, lang);
     }
 

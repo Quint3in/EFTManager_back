@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.junit.jupiter.api.Disabled;
 
-@Disabled("Falla de forma intermitente en la suite completa por presión de recursos de Docker/WSL2 — funciona correctamente en ejecución aislada")
+//@Disabled("Falla de forma intermitente en la suite completa por presión de recursos de Docker/WSL2 — funciona correctamente en ejecución aislada")
 class FavoriteControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired

@@ -36,7 +36,11 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.password()))
                 .build();
 
-        userRepository.save(newUser);
+        try {
+            userRepository.save(newUser);
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            throw new UserAlreadyExistsException("El username o email ya está en uso");
+        }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(newUser.getUsername());
         String token = jwtService.generateToken(userDetails);

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository; // tu propio repositorio JPA
+    private final UserRepository userRepository;
 
     public CustomUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -24,8 +24,8 @@ public class CustomUserDetailsService implements UserDetailsService {
         return org.springframework.security.core.userdetails.User
                 .builder()
                 .username(user.getUsername())
-                .password(user.getPassword()) // ya debe estar hasheado con BCrypt
-                .roles(String.valueOf(user.getRole())) // ej. "USER", "ADMIN"
+                .password(user.getPassword())
+                .roles(String.valueOf(user.getRole()))
                 .build();
     }
 }

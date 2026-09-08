@@ -41,7 +41,6 @@ public class TarkovMetadataService {
 
             return languages.isEmpty() ? FALLBACK_LANGUAGES : languages;
         } catch (RestClientException ex) {
-            // Si Tarkov.dev no responde, no tumbamos la app: usamos un fallback seguro
             return FALLBACK_LANGUAGES;
         }
     }

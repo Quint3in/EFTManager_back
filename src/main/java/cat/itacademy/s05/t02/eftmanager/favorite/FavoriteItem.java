@@ -8,7 +8,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "favorite_items", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "item_id"}))
+@Table(name = "favorite_items", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "item_id", "mode"}))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class FavoriteItem {
 
