@@ -19,7 +19,7 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("EFT Manager API")
                         .version("1.0.0")
-                        .description("API de gestión con registro, login y JWT"))
+                        .description("API"))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,

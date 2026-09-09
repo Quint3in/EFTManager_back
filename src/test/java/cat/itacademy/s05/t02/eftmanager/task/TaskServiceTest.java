@@ -105,9 +105,13 @@ class TaskServiceTest {
         JsonNode localeNode = jsonMapper.readTree(LOCALE);
 
         lenient().when(builder.baseUrl(anyString()).build()
-                        .get().uri(anyString(), any(Object[].class))
+                        .get().uri(eq("/{externalMode}/tasks"), any(Object[].class))
                         .retrieve().body(JsonNode.class))
-                .thenReturn(catalogNode, localeNode);
+                .thenReturn(catalogNode);
+        lenient().when(builder.baseUrl(anyString()).build()
+                        .get().uri(eq("/{externalMode}/tasks_{lang}"), any(Object[].class))
+                        .retrieve().body(JsonNode.class))
+                .thenReturn(localeNode);
 
         taskService = new TaskService(builder, "https://json.tarkov.dev", taskProgressRepository, userRepository, null);
         ReflectionTestUtils.setField(taskService, "self", taskService);
